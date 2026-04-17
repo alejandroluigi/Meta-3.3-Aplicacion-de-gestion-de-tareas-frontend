@@ -30,7 +30,7 @@
 <script setup>
 import { ref } from 'vue'
 
-const emit = defineEmits(['crear'])
+const emit = defineEmits(['tarea-creada'])
 
 const titulo = ref('')
 const completada = ref(false)
@@ -38,7 +38,7 @@ const completada = ref(false)
 const crearTarea = () => {
   if (!titulo.value.trim()) return
 
-  emit('crear', {
+  emit('tarea-creada', {
     titulo: titulo.value,
     completada: completada.value
   })

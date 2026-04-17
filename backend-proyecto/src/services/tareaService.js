@@ -1,80 +1,107 @@
-const BASE_URL = 'http://localhost:3000/api/tareas'
+import authService from './authService';
 
-// Función auxiliar para manejar respuestas
-const manejarRespuesta = async (response) => {
-  const data = await response.json()
+const API_BASE = 'http://localhost:3000';
 
-  if (!response.ok) {
-    throw new Error(data.message || data.error || 'Error en la petición')
-  }
+const tareaService = {
 
-  return data
-}
+  // ✅ SIN CSRF
+  async obtenerTareas() {
+    const response = await fetch(`${API_BASE}/api/tareas`, {
+      method: 'GET',
+      credentials: 'include'
+    });
 
-export default {
-  // GET /api/tareas
-  async obtenerTodas() {
-    const response = await fetch(BASE_URL)
-    return manejarRespuesta(response)
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data.data || [];
   },
 
-  // GET /api/tareas/:id
-  async obtenerPorId(id) {
-    const response = await fetch(`${BASE_URL}/${id}`)
-    return manejarRespuesta(response)
+  // ✅ SIN CSRF
+  async buscarTareas(texto) {
+    const response = await fetch(`${API_BASE}/api/tareas/buscar?q=${encodeURIComponent(texto)}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data.data || [];
   },
 
-  // GET /api/tareas/buscar?q=texto
-  async buscarPorTitulo(q) {
-    const response = await fetch(`${BASE_URL}/buscar?q=${encodeURIComponent(q)}`)
-    return manejarRespuesta(response)
-  },
-
-  // POST /api/tareas
-  async crear(tarea) {
-    const response = await fetch(BASE_URL, {
+  // 🔥 CON CSRF
+  async crearTarea(tarea) {
+    const response = await fetch(`${API_BASE}/api/tareas`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': authService.getCsrfToken()
       },
+      credentials: 'include',
       body: JSON.stringify(tarea)
-    })
+    });
 
-    return manejarRespuesta(response)
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data.data;
   },
 
-  // PUT /api/tareas/:id
-  async actualizarCompleta(id, tarea) {
-    const response = await fetch(`${BASE_URL}/${id}`, {
+  async actualizarTareaPUT(tarea) {
+    const response = await fetch(`${API_BASE}/api/tareas/${tarea.id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': authService.getCsrfToken()
       },
+      credentials: 'include',
       body: JSON.stringify(tarea)
-    })
+    });
 
-    return manejarRespuesta(response)
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data.data;
   },
 
-  // PATCH /api/tareas/:id
-  async actualizarParcial(id, datosParciales) {
-    const response = await fetch(`${BASE_URL}/${id}`, {
+  async actualizarTareaPATCH(tarea) {
+    const response = await fetch(`${API_BASE}/api/tareas/${tarea.id}`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': authService.getCsrfToken()
       },
-      body: JSON.stringify(datosParciales)
-    })
+      credentials: 'include',
+      body: JSON.stringify(tarea)
+    });
 
-    return manejarRespuesta(response)
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data.data;
   },
 
-  // DELETE /api/tareas/:id
-  async eliminar(id) {
-    const response = await fetch(`${BASE_URL}/${id}`, {
-      method: 'DELETE'
-    })
+  async eliminarTarea(id) {
+    const response = await fetch(`${API_BASE}/api/tareas/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'x-csrf-token': authService.getCsrfToken()
+      },
+      credentials: 'include'
+    });
 
-    return manejarRespuesta(response)
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+
+    return data;
   }
-}
+};
+
+export default tareaService;
